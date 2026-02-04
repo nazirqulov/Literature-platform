@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitoblar - Literature Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="nav-brand">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M6 4h12l8 8v16H6V4z" fill="url(#gradient1)"/>
+                    <defs>
+                        <linearGradient id="gradient1" x1="6" y1="4" x2="26" y2="28">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#ec4899"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>Kitoblar</span>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="active">Bosh sahifa</a></li>
+                <li><a href="books.html">Kitoblar</a></li>
+                <li><a href="#" onclick="checkAuth('favorites')">Sevimlilar</a></li>
+                <li><a href="#" onclick="checkAuth('profile')">Profil</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" id="loginBtn" onclick="window.location.href='login.html'">Kirish</button>
+                <button class="btn btn-primary" id="registerBtn" onclick="window.location.href='register.html'">Ro'yxatdan o'tish</button>
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <button class="btn btn-ghost" id="userMenuBtn">
+                        <img src="" alt="User" id="userAvatar" class="user-avatar">
+                        <span id="userName">User</span>
+                    </button>
+                    <div class="dropdown" id="userDropdown">
+                        <a href="profile.html">Profil</a>
+                        <a href="favorites.html">Sevimlilar</a>
+                        <a href="#" onclick="logout()">Chiqish</a>
+                    </div>
+                </div>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="container hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Kitoblar olamiga xush kelibsiz</h1>
+                <p class="hero-subtitle">Minglab kitoblar, mualliflar va hikoyalar sizni kutmoqda</p>
+                <div class="search-box">
+                    <svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <input type="text" id="heroSearch" placeholder="Kitob nomi, muallif yoki janr...">
+                    <button class="btn btn-primary">Qidirish</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-number" data-count="5000">0</div>
+                    <div class="stat-label">Kitoblar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-number" data-count="10000">0</div>
+                    <div class="stat-label">Foydalanuvchilar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✍️</div>
+                    <div class="stat-number" data-count="1500">0</div>
+                    <div class="stat-label">Mualliflar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-number" data-count="50000">0</div>
+                    <div class="stat-label">Sharhlar</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Books -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Tavsiya etilgan kitoblar</h2>
+                <a href="books.html" class="view-all">Barchasini ko'rish →</a>
+            </div>
+            <div class="books-grid" id="featuredBooks">
+                <div class="loading">Yuklanmoqda...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Books -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Mashhur kitoblar</h2>
+                <a href="books.html?sort=popular" class="view-all">Barchasini ko'rish →</a>
+            </div>
+            <div class="books-grid" id="popularBooks">
+                <div class="loading">Yuklanmoqda...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Latest Books -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Yangi kitoblar</h2>
+                <a href="books.html?sort=latest" class="view-all">Barchasini ko'rish →</a>
+            </div>
+            <div class="books-grid" id="latestBooks">
+                <div class="loading">Yuklanmoqda...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Kitoblar Platform</h3>
+                    <p>Eng yaxshi adabiyot va kitoblarni kashf eting</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Havolalar</h4>
+                    <ul>
+                        <li><a href="index.html">Bosh sahifa</a></li>
+                        <li><a href="books.html">Kitoblar</a></li>
+                        <li><a href="about.html">Biz haqimizda</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Yordam</h4>
+                    <ul>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Aloqa</a></li>
+                        <li><a href="#">Qo'llab-quvvatlash</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Literature Platform. Barcha huquqlar himoyalangan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
