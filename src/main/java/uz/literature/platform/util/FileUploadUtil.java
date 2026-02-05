@@ -23,21 +23,18 @@ public class FileUploadUtil {
             if (file.isEmpty()) {
                 throw new BadRequestException("Fayl bo'sh");
             }
-            
-            // Create directory if not exists
+
             Path uploadPath = Paths.get(uploadDir, subDirectory);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
-            
-            // Generate unique filename
+
             String originalFilename = file.getOriginalFilename();
             String extension = originalFilename != null && originalFilename.contains(".") 
                     ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
                     : "";
             String filename = UUID.randomUUID().toString() + extension;
-            
-            // Save file
+
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             

@@ -64,7 +64,6 @@ public class AIServiceImpl implements AIService {
                 "Hozir foydalanuvchi '%s' nomli kitob haqida gaplashmoqchi. " +
                 "Muallif: %s. Tavsif: %s",
                 book.getTitle(),
-                book.getAuthor().getName(),
                 book.getDescription()
             );
             
@@ -116,7 +115,6 @@ public class AIServiceImpl implements AIService {
             "Tavsif: %s\n\n" +
             "Kitobning asosiy g'oyasi, mavzulari va uslubini tahlil qiling.",
             book.getTitle(),
-            book.getAuthor().getName(),
             book.getDescription()
         );
         
@@ -176,7 +174,6 @@ public class AIServiceImpl implements AIService {
             "Muallif: %s\n" +
             "Tavsif: %s",
             book.getTitle(),
-            book.getAuthor().getName(),
             book.getDescription()
         );
         

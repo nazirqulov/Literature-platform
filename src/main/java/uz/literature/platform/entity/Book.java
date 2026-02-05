@@ -1,11 +1,10 @@
 package uz.literature.platform.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import uz.literature.platform.entity.base.BaseLongEntity;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -13,24 +12,18 @@ import java.util.Set;
 
 @Entity
 @Table(name = "books")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Book {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Book extends BaseLongEntity {
     
     @Column(nullable = false)
     private String title;
     
     @Column(columnDefinition = "TEXT")
     private String description;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id")
-    private Author author;
+
     
     @ManyToMany
     @JoinTable(
@@ -38,7 +31,7 @@ public class Book {
         joinColumns = @JoinColumn(name = "book_id"),
         inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    private Set<Category> categories = new HashSet<>();
+    private Set<Category> categories;
     
     private String isbn;
     
@@ -84,12 +77,5 @@ public class Book {
     
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private Set<Favorite> favorites = new HashSet<>();
-    
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+
 }

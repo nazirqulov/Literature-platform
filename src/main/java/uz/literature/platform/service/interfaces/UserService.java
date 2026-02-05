@@ -15,4 +15,6 @@ public interface UserService {
     UserResponse uploadProfileImage(MultipartFile file);
     
     void changePassword(String oldPassword, String newPassword);
+
+    Object loadUserByUsername(String username);
 }
