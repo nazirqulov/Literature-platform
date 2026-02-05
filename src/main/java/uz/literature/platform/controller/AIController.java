@@ -1,6 +1,7 @@
 package uz.literature.platform.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +15,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/ai")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class AIController {
     
-    @Autowired
-    private AIService aiService;
+
+    private final AIService aiService;
     
     @PostMapping("/chat")
     public ResponseEntity<AIResponse> chat(@Valid @RequestBody AIQueryRequest request) {

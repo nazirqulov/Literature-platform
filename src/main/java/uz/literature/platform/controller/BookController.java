@@ -1,7 +1,7 @@
 package uz.literature.platform.controller;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,11 +18,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/books")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class BookController {
-    
-    @Autowired
-    private BookService bookService;
-    
+
+
+    private final BookService bookService;
+
+
     @GetMapping
     public ResponseEntity<Page<BookResponse>> getAllBooks(
             @RequestParam(defaultValue = "0") int page,
@@ -31,14 +33,14 @@ public class BookController {
         Page<BookResponse> books = bookService.getAllBooks(pageable);
         return ResponseEntity.ok(books);
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<BookResponse> getBookById(@PathVariable Long id) {
         bookService.incrementViewCount(id);
         BookResponse book = bookService.getBookById(id);
         return ResponseEntity.ok(book);
     }
-    
+
     @GetMapping("/search")
     public ResponseEntity<Page<BookResponse>> searchBooks(
             @RequestParam String keyword,
@@ -48,7 +50,7 @@ public class BookController {
         Page<BookResponse> books = bookService.searchBooks(keyword, pageable);
         return ResponseEntity.ok(books);
     }
-    
+
     @GetMapping("/author/{authorId}")
     public ResponseEntity<Page<BookResponse>> getBooksByAuthor(
             @PathVariable Long authorId,
@@ -58,7 +60,7 @@ public class BookController {
         Page<BookResponse> books = bookService.getBooksByAuthor(authorId, pageable);
         return ResponseEntity.ok(books);
     }
-    
+
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<Page<BookResponse>> getBooksByCategory(
             @PathVariable Long categoryId,
@@ -68,84 +70,84 @@ public class BookController {
         Page<BookResponse> books = bookService.getBooksByCategory(categoryId, pageable);
         return ResponseEntity.ok(books);
     }
-    
+
     @GetMapping("/featured")
     public ResponseEntity<List<BookResponse>> getFeaturedBooks() {
         List<BookResponse> books = bookService.getFeaturedBooks();
         return ResponseEntity.ok(books);
     }
-    
+
     @GetMapping("/top-rated")
     public ResponseEntity<List<BookResponse>> getTopRatedBooks(
             @RequestParam(defaultValue = "10") int limit) {
         List<BookResponse> books = bookService.getTopRatedBooks(limit);
         return ResponseEntity.ok(books);
     }
-    
+
     @GetMapping("/latest")
     public ResponseEntity<List<BookResponse>> getLatestBooks(
             @RequestParam(defaultValue = "10") int limit) {
         List<BookResponse> books = bookService.getLatestBooks(limit);
         return ResponseEntity.ok(books);
     }
-    
+
     @GetMapping("/popular")
     public ResponseEntity<List<BookResponse>> getPopularBooks(
             @RequestParam(defaultValue = "10") int limit) {
         List<BookResponse> books = bookService.getPopularBooks(limit);
         return ResponseEntity.ok(books);
     }
-    
+
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> createBook(@Valid @RequestBody BookCreateRequest request) {
         BookResponse book = bookService.createBook(request);
         return ResponseEntity.ok(book);
     }
-    
+
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> updateBook(
             @PathVariable Long id,
             @Valid @RequestBody BookCreateRequest request) {
         BookResponse book = bookService.updateBook(id, request);
         return ResponseEntity.ok(book);
     }
-    
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     @PostMapping("/{id}/cover")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> uploadCoverImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         BookResponse book = bookService.uploadCoverImage(id, file);
         return ResponseEntity.ok(book);
     }
-    
+
     @PostMapping("/{id}/pdf")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> uploadPdfFile(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         BookResponse book = bookService.uploadPdfFile(id, file);
         return ResponseEntity.ok(book);
     }
-    
+
     @PostMapping("/{id}/audio")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> uploadAudioFile(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         BookResponse book = bookService.uploadAudioFile(id, file);
         return ResponseEntity.ok(book);
     }
-    
+
     @PostMapping("/{id}/download")
     public ResponseEntity<Void> incrementDownloadCount(@PathVariable Long id) {
         bookService.incrementDownloadCount(id);

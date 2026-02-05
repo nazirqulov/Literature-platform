@@ -1,45 +1,40 @@
 package uz.literature.platform.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import uz.literature.platform.entity.base.BaseLongEntity;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User implements UserDetails {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
+@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
+@SQLRestriction(value = "deleted=false")
+public class User extends BaseLongEntity implements UserDetails {
+
     @Column(nullable = false, unique = true)
     private String username;
-    
-    @Column(nullable = false, unique = true)
-    private String email;
-    
+
     @Column(nullable = false)
     private String password;
-    
-    @Column(name = "full_name")
-    private String fullName;
-    
-    private String phone;
-    
-    @Column(name = "profile_image")
-    private String profileImage;
-    
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.USER;
@@ -49,18 +44,22 @@ public class User implements UserDetails {
     
     @Column(name = "email_verified")
     private Boolean emailVerified = false;
-    
+
     @Column(name = "reset_token")
     private String resetToken;
-    
+
     @Column(name = "reset_token_expiry")
     private LocalDateTime resetTokenExpiry;
-    
+
     @Column(name = "verification_code")
     private String verificationCode;
-    
+
     @Column(name = "verification_code_expiry")
     private LocalDateTime verificationCodeExpiry;
+
+    @OneToOne(mappedBy = "user", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private UserProfile userProfile;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Favorite> favorites = new HashSet<>();
@@ -70,18 +69,11 @@ public class User implements UserDetails {
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<AIConversation> aiConversations = new HashSet<>();
-    
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(()->role.name());
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -105,6 +97,7 @@ public class User implements UserDetails {
     }
 
     public enum Role {
+        SUPERADMIN,
         USER,
         ADMIN
     }

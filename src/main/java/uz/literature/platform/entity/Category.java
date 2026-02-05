@@ -1,26 +1,26 @@
 package uz.literature.platform.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+import uz.literature.platform.entity.base.BaseLongEntity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "categories")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Category {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
+@SQLDelete(sql = "update category set deleted=true where id=?")
+@Where(clause = "deleted = false")
+public class Category  extends BaseLongEntity {
+
     @Column(nullable = false, unique = true)
     private String name;
     
@@ -29,8 +29,13 @@ public class Category {
     
     @ManyToMany(mappedBy = "categories")
     private Set<Book> books = new HashSet<>();
-    
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+
+    // Parent category
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Category parent;
+
+    // Child categories
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private Set<Category> children = new HashSet<>();
 }

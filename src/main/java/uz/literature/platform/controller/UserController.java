@@ -1,6 +1,6 @@
 package uz.literature.platform.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,10 +13,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class UserController {
     
-    @Autowired
-    private UserService userService;
+
+    private final UserService userService;
     
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser() {
@@ -24,7 +25,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
     
-    @PutMapping("/me")
+    @PutMapping("/update-profile")
     public ResponseEntity<UserResponse> updateProfile(@RequestBody UserResponse request) {
         UserResponse user = userService.updateProfile(request);
         return ResponseEntity.ok(user);
@@ -47,4 +48,9 @@ public class UserController {
         
         return ResponseEntity.ok(response);
     }
+
+//    @PostMapping("/me/profile-update")
+//    public ResponseEntity<?> updateProfile(@RequestParam(required = false) ProfileUpdate update){
+//        userService
+//    }
 }
