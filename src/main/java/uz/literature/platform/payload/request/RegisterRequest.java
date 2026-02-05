@@ -19,9 +19,4 @@ public class RegisterRequest {
     @NotBlank(message = "Parol kiritilishi shart")
     @Size(min = 6, message = "Parol kamida 6 ta belgidan iborat bo'lishi kerak")
     private String password;
-    
-    @NotBlank(message = "To'liq ism kiritilishi shart")
-    private String fullName;
-    
-    private String phone;
 }
