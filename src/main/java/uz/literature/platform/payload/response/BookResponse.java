@@ -12,7 +12,8 @@ public class BookResponse {
     private String title;
     private String description;
     private AuthorResponse author;
-    private Set<CategoryResponse> categories;
+    private CategoryResponse category;
+    private String subCategoryName;
     private String isbn;
     private Integer publishedYear;
     private String publisher;

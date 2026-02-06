@@ -13,10 +13,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class CategoryRequestDto {
+    @NotBlank(message = "Category nomi bo‘sh bo‘lishi mumkin emas")
+    private String name;
 
-    @NotBlank(message = "Bo‘sh bo‘lishi mumkin emas")
-    private String categoryName;
+    private String description;
 
-    private String categoryDescription;
+    // Parent orqali bog‘lash
+    private Long parentId;     // agar mavjud bo‘lsa
+
+    private String parentName; // agar nom orqali topish kerak bo‘lsa
 
 }
