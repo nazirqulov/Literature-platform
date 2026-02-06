@@ -39,6 +39,9 @@ public class UserServiceImpl implements UserService {
     public UserResponse getCurrentUser() {
         User user = getCurrentUserEntity();
         UserResponse response = modelMapper.map(user, UserResponse.class);
+        UserProfile userProfile = user.getUserProfile();
+        response.setPhone(userProfile.getPhone());
+        response.setEmail(userProfile.getEmail());
         response.setRole(user.getRole().name());
         return response;
     }
@@ -59,6 +62,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse updateProfile(UserResponse request) {
+
         User user = getCurrentUserEntity();
 
         UserProfile userProfile = user.getUserProfile();
@@ -81,15 +85,19 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse uploadProfileImage(MultipartFile file) {
+
         User user = getCurrentUserEntity();
 
         UserProfile userProfile = user.getUserProfile();
 
         String fileName = fileUploadUtil.saveFile(file, "profiles");
+
         userProfile.setProfileImage(fileName);
 
         User updatedUser = userRepository.save(user);
+
         UserResponse response = modelMapper.map(updatedUser, UserResponse.class);
+
         response.setRole(updatedUser.getRole().name());
 
         return response;

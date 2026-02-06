@@ -1,6 +1,7 @@
 package uz.literature.platform.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,8 +32,8 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
     
-    @PostMapping("/me/profile-image")
-    public ResponseEntity<UserResponse> uploadProfileImage(@RequestParam("file") MultipartFile file) {
+    @PostMapping(value = "/me/profile-image",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> uploadProfileImage(@RequestParam MultipartFile file) {
         UserResponse user = userService.uploadProfileImage(file);
         return ResponseEntity.ok(user);
     }
@@ -48,9 +49,4 @@ public class UserController {
         
         return ResponseEntity.ok(response);
     }
-
-//    @PostMapping("/me/profile-update")
-//    public ResponseEntity<?> updateProfile(@RequestParam(required = false) ProfileUpdate update){
-//        userService
-//    }
 }

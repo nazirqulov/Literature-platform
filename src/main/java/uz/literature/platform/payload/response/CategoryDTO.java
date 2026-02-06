@@ -15,9 +15,8 @@ import java.time.LocalDate;
 @Data
 public class CategoryDTO {
 
+    private String name;
 
-    private String categoryName;
-
-    private String categoryDescription;
+    private String description;
 
 }

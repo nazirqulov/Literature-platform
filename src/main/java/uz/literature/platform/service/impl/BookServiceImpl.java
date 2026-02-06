@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import uz.literature.platform.entity.Book;
 import uz.literature.platform.entity.Category;
+import uz.literature.platform.entity.SubCategory;
 import uz.literature.platform.entity.User;
 import uz.literature.platform.exception.BadRequestException;
 import uz.literature.platform.exception.ResourceNotFoundException;
@@ -19,12 +20,11 @@ import uz.literature.platform.payload.response.CategoryResponse;
 import uz.literature.platform.repository.BookRepository;
 import uz.literature.platform.repository.CategoryRepository;
 import uz.literature.platform.repository.FavoriteRepository;
+import uz.literature.platform.repository.SubCategoryRepository;
 import uz.literature.platform.service.interfaces.BookService;
 import uz.literature.platform.util.FileUploadUtil;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +39,8 @@ public class BookServiceImpl implements BookService {
     private final FavoriteRepository favoriteRepository;
 
     private final ModelMapper modelMapper;
+
+    private final SubCategoryRepository subCategoryRepository;
 
     private FileUploadUtil fileUploadUtil;
 
@@ -59,14 +61,14 @@ public class BookServiceImpl implements BookService {
 
         // Set categories
         if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-            Set<Category> categories = new HashSet<>();
-            for (Long categoryId : request.getCategoryIds()) {
-                Category category = categoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Kategoriya topilmadi: " + categoryId));
-                categories.add(category);
-            }
-            book.setCategories(categories);
+            Long subCategoryId = request.getCategoryIds().iterator().next();
+
+            SubCategory subCategory = subCategoryRepository.findById(subCategoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("SubCategory topilmadi"));
+
+            book.setSubCategory(subCategory);
         }
+
 
         Book savedBook = bookRepository.save(book);
         return mapToResponse(savedBook, null);
@@ -88,16 +90,15 @@ public class BookServiceImpl implements BookService {
         book.setPageCount(request.getPageCount());
         book.setIsFeatured(request.getIsFeatured());
 
-        // Update categories
-        if (request.getCategoryIds() != null) {
-            Set<Category> categories = new HashSet<>();
-            for (Long categoryId : request.getCategoryIds()) {
-                Category category = categoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Kategoriya topilmadi: " + categoryId));
-                categories.add(category);
-            }
-            book.setCategories(categories);
+        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+            Long subCategoryId = request.getCategoryIds().iterator().next();
+
+            SubCategory subCategory = subCategoryRepository.findById(subCategoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("SubCategory topilmadi"));
+
+            book.setSubCategory(subCategory);
         }
+
 
         Book updatedBook = bookRepository.save(book);
         return mapToResponse(updatedBook, null);
@@ -130,7 +131,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Page<BookResponse> getBooksByCategory(Long categoryId, Pageable pageable) {
-        Page<Book> books = bookRepository.findByCategoriesIdAndIsActiveTrue(categoryId, pageable);
+        Page<Book> books = bookRepository.findByCategoryIdAndIsActiveTrue(categoryId, pageable);
         return books.map(book -> mapToResponse(book, null));
     }
 
@@ -240,20 +241,32 @@ public class BookServiceImpl implements BookService {
     }
 
     private BookResponse mapToResponse(Book book, User currentUser) {
+
         BookResponse response = modelMapper.map(book, BookResponse.class);
 
-        Set<CategoryResponse> categoryResponses = book.getCategories().stream()
-                .map(category -> {
-                    CategoryResponse catResponse = modelMapper.map(category, CategoryResponse.class);
-                    catResponse.setBooksCount(category.getBooks().size());
-                    return catResponse;
-                })
-                .collect(Collectors.toSet());
-        response.setCategories(categoryResponses);
+        // SubCategory -> Category
+        if (book.getSubCategory() != null) {
 
-        // Check if book is favorite for current user
+            SubCategory sub = book.getSubCategory();
+            Category parent = sub.getCategory();
+
+            CategoryResponse catResponse = modelMapper.map(parent, CategoryResponse.class);
+
+            // shu kategoriya ichidagi barcha kitoblar soni
+            long booksCount = parent.getSubCategories().stream()
+                    .flatMap(sc -> sc.getBooks().stream())
+                    .count();
+
+            catResponse.setBooksCount((int) booksCount);
+
+            response.setCategory(catResponse); // BookResponse da bitta category bo‘lishi kerak
+            response.setSubCategoryName(sub.getName());
+        }
+
+        // favorite tekshirish
         if (currentUser != null) {
-            boolean isFavorite = favoriteRepository.existsByUserIdAndBookId(currentUser.getId(), book.getId());
+            boolean isFavorite = favoriteRepository
+                    .existsByUserIdAndBookId(currentUser.getId(), book.getId());
             response.setIsFavorite(isFavorite);
         } else {
             response.setIsFavorite(false);
@@ -261,4 +274,27 @@ public class BookServiceImpl implements BookService {
 
         return response;
     }
+
+//    private BookResponse mapToResponse(Book book, User currentUser) {
+//        BookResponse response = modelMapper.map(book, BookResponse.class);
+//
+//        Set<CategoryResponse> categoryResponses = book.getCategories().stream()
+//                .map(category -> {
+//                    CategoryResponse catResponse = modelMapper.map(category, CategoryResponse.class);
+//                    catResponse.setBooksCount(category.getBooks().size());
+//                    return catResponse;
+//                })
+//                .collect(Collectors.toSet());
+//        response.setCategories(categoryResponses);
+//
+//        // Check if book is favorite for current user
+//        if (currentUser != null) {
+//            boolean isFavorite = favoriteRepository.existsByUserIdAndBookId(currentUser.getId(), book.getId());
+//            response.setIsFavorite(isFavorite);
+//        } else {
+//            response.setIsFavorite(false);
+//        }
+//
+//        return response;
+//    }
 }

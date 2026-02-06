@@ -26,16 +26,8 @@ public class Category  extends BaseLongEntity {
     
     @Column(columnDefinition = "TEXT")
     private String description;
-    
-    @ManyToMany(mappedBy = "categories")
-    private Set<Book> books = new HashSet<>();
 
-    // Parent category
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Category parent;
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SubCategory> subCategories = new HashSet<>();
 
-    // Child categories
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private Set<Category> children = new HashSet<>();
 }

@@ -15,7 +15,9 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     Page<Book> findByIsActiveTrue(Pageable pageable);
 
-    Page<Book> findByCategoriesIdAndIsActiveTrue(Long categoryId, Pageable pageable);
+    @Query("SELECT b FROM Book b WHERE b.subCategory.category.id = :categoryId AND b.isActive = true")
+    Page<Book> findByCategoryIdAndIsActiveTrue(@Param("categoryId") Long categoryId, Pageable pageable);
+
 
     List<Book> findByIsFeaturedTrueAndIsActiveTrue();
 
@@ -30,14 +32,14 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @Query(
             value = """
-        select b.*
-        from books b
-        where b.is_active = true
-          and (
-            lower(b.title) like lower(concat('%', :keyword, '%'))
-            or lower(b.description) like lower(concat('%', :keyword, '%'))
-          )
-        """,
+                    select b.*
+                    from books b
+                    where b.is_active = true
+                      and (
+                        lower(b.title) like lower(concat('%', :keyword, '%'))
+                        or lower(b.description) like lower(concat('%', :keyword, '%'))
+                      )
+                    """,
             countQuery = """
                     select count(*)
                     from books b

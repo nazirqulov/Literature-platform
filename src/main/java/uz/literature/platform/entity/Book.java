@@ -24,14 +24,11 @@ public class Book extends BaseLongEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    
-    @ManyToMany
-    @JoinTable(
-        name = "book_categories",
-        joinColumns = @JoinColumn(name = "book_id"),
-        inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
-    private Set<Category> categories;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_category_id")
+    private SubCategory subCategory;
+
     
     private String isbn;
     
