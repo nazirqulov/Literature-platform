@@ -423,7 +423,7 @@
 //            throw new BadRequestException("Kod muddati tugagan");
 //        }
 //
-//// verifyEmail ichida, oxirgi qismni shunday o‘zgartiring:
+/// / verifyEmail ichida, oxirgi qismni shunday o‘zgartiring:
 //
 //        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
 //                .username(user.getUsername())           // "barkamol123"
@@ -823,16 +823,40 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
         sendPasswordResetEmail(user.getEmail(), resetToken);
     }
 
+    //    @Override
+//    @Transactional
+//    public void resetPassword(ResetPasswordRequest request) {
+//        User user = userRepository.findByResetToken(request.getToken())
+//                .orElseThrow(() -> new BadRequestException("Noto'g'ri yoki muddati o'tgan token"));
+//
+//        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+//            throw new BadRequestException("Token muddati tugagan");
+//        }
+//        passwordEncoder
+//
+//        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+//        user.setResetToken(null);
+//        user.setResetTokenExpiry(null);
+//
+//        userRepository.save(user);
+//    }
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByResetToken(request.getToken())
                 .orElseThrow(() -> new BadRequestException("Noto'g'ri yoki muddati o'tgan token"));
 
+        // Token muddati tekshiruvi
         if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new BadRequestException("Token muddati tugagan");
         }
 
+        // Joriy parolni tekshirish (agar foydalanuvchi eski parolni kiritgan bo‘lsa)
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Joriy parol noto'g'ri");
+        }
+
+        // Yangi parolni saqlash
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setResetToken(null);
         user.setResetTokenExpiry(null);

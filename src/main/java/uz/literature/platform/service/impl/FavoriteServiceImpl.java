@@ -1,5 +1,6 @@
 package uz.literature.platform.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,19 +19,16 @@ import uz.literature.platform.service.interfaces.FavoriteService;
 import uz.literature.platform.service.interfaces.UserService;
 
 @Service
+@RequiredArgsConstructor
 public class FavoriteServiceImpl implements FavoriteService {
-    
-    @Autowired
-    private FavoriteRepository favoriteRepository;
-    
-    @Autowired
-    private BookRepository bookRepository;
-    
-    @Autowired
-    private UserService userService;
-    
-    @Autowired
-    private ModelMapper modelMapper;
+
+    private final FavoriteRepository favoriteRepository;
+
+    private final BookRepository bookRepository;
+
+    private final UserService userService;
+
+    private final ModelMapper modelMapper;
     
     @Override
     @Transactional

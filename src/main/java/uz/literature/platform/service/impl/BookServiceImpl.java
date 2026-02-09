@@ -33,7 +33,6 @@ public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
 
-
     private final CategoryRepository categoryRepository;
 
     private final FavoriteRepository favoriteRepository;
