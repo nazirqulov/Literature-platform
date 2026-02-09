@@ -9,6 +9,9 @@ public class ResetPasswordRequest {
     
     @NotBlank(message = "Token kiritilishi shart")
     private String token;
+
+    @NotBlank(message = "Joriy parol kiritilishi shart!")
+    private String currentPassword;
     
     @NotBlank(message = "Yangi parol kiritilishi shart")
     @Size(min = 6, message = "Parol kamida 6 ta belgidan iborat bo'lishi kerak")

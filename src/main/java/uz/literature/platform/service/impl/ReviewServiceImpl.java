@@ -1,5 +1,6 @@
 package uz.literature.platform.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,19 +24,16 @@ import uz.literature.platform.service.interfaces.UserService;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
-    
-    @Autowired
-    private ReviewRepository reviewRepository;
-    
-    @Autowired
-    private BookRepository bookRepository;
-    
-    @Autowired
-    private UserService userService;
-    
-    @Autowired
-    private ModelMapper modelMapper;
+
+    private final ReviewRepository reviewRepository;
+
+    private final BookRepository bookRepository;
+
+    private final UserService userService;
+
+    private final ModelMapper modelMapper;
     
     @Override
     @Transactional
