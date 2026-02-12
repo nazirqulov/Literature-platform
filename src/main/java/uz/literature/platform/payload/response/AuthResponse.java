@@ -13,8 +13,7 @@ public class AuthResponse {
     private String tokenType = "Bearer";
     private UserResponse user;
     
-    public AuthResponse(String token, UserResponse user) {
+    public AuthResponse(String token) {
         this.token = token;
-        this.user = user;
     }
 }

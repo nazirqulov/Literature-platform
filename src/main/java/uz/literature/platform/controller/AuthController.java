@@ -4,11 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uz.literature.platform.payload.request.ForgotPasswordRequest;
-import uz.literature.platform.payload.request.LoginRequest;
-import uz.literature.platform.payload.request.RegisterRequest;
-import uz.literature.platform.payload.request.ResetPasswordRequest;
+import uz.literature.platform.payload.request.*;
+import uz.literature.platform.payload.response.AuthResponse;
 import uz.literature.platform.payload.response.TokenDTO;
+import uz.literature.platform.security.JwtTokenProvider;
 import uz.literature.platform.service.interfaces.AuthService;
 
 import java.util.HashMap;
@@ -21,6 +20,8 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
@@ -63,5 +64,10 @@ public class AuthController {
         response.put("message", "Parol muvaffaqiyatli yangilandi");
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/auth/refresh")
+    public AuthResponse refresh(@RequestBody RefreshTokenRequest request) {
+        return jwtTokenProvider.refreshToken(request);
     }
 }
