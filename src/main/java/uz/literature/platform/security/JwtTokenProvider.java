@@ -16,6 +16,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import uz.literature.platform.entity.User;
+import uz.literature.platform.exception.BadRequestException;
+import uz.literature.platform.payload.request.RefreshTokenRequest;
+import uz.literature.platform.payload.response.AuthResponse;
+import uz.literature.platform.repository.UserRepository;
 import uz.literature.platform.service.JwtTokenProperties;
 
 import javax.crypto.SecretKey;
@@ -32,6 +36,7 @@ import java.util.function.Function;
 public class JwtTokenProvider {
 
     private final JwtTokenProperties props;
+    private final UserRepository userRepository;
 
     private SecretKey key;
 
@@ -106,5 +111,37 @@ public class JwtTokenProvider {
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .setAllowedClockSkewSeconds(30) // vaqt farqi uchun
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+
+
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        if (!validateToken(refreshToken)) {
+            throw new BadRequestException("Refresh token noto‘g‘ri yoki muddati tugagan");
+        }
+
+        String username = extractUsername(refreshToken);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BadRequestException("User topilmadi"));
+
+        String newAccessToken = generateAccessToken(user);
+
+        return new AuthResponse(newAccessToken);
     }
 }

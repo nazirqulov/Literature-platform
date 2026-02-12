@@ -62,7 +62,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/register").permitAll()
+                        .requestMatchers("/api/register",
+                                "/profiles/**").permitAll()
                         .requestMatchers("/api/login").permitAll()
                         .requestMatchers("/api/verify-email", "/api/forgot-password", "/api/reset-password").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()

@@ -17,62 +17,115 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book extends BaseLongEntity {
-    
+
     @Column(nullable = false)
     private String title;
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sub_category_id")
     private SubCategory subCategory;
 
-    
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "book_authors",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "author_id")
+    )
+    private Set<Author> authors = new HashSet<>();
+
     private String isbn;
-    
+
     @Column(name = "published_year")
     private Integer publishedYear;
-    
+
     private String publisher;
-    
+
     private String language;
-    
+
     @Column(name = "page_count")
     private Integer pageCount;
-    
+
     @Column(name = "cover_image")
     private String coverImage;
-    
+
     @Column(name = "pdf_file")
     private String pdfFile;
-    
+
     @Column(name = "audio_file")
     private String audioFile;
-    
+
     @Column(name = "view_count")
     private Integer viewCount = 0;
-    
+
     @Column(name = "download_count")
     private Integer downloadCount = 0;
-    
+
     @Column(name = "average_rating")
     private Double averageRating = 0.0;
-    
+
     @Column(name = "rating_count")
     private Integer ratingCount = 0;
-    
+
     @Column(name = "is_featured")
     private Boolean isFeatured = false;
-    
+
     @Column(name = "is_active")
     private Boolean isActive = true;
-    
+
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private Set<Review> reviews = new HashSet<>();
-    
+
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private Set<Favorite> favorites = new HashSet<>();
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    private Set<Chapter> chapters = new HashSet<>();
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
+    private Set<UserBookProgress> userProgresses = new HashSet<>();
+
+    /**
+     * Mualliflar ro'yxatini string sifatida qaytarish
+     */
+    public String getAuthorsAsString() {
+        if (authors == null || authors.isEmpty()) {
+            return "Noma'lum muallif";
+        }
+        return authors.stream()
+                .map(Author::getName)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("Noma'lum muallif");
+    }
+
+    /**
+     * Kitobni ko'rish sonini oshirish
+     */
+    public void incrementViewCount() {
+        this.viewCount = (this.viewCount == null ? 0 : this.viewCount) + 1;
+    }
+
+    /**
+     * Yuklab olish sonini oshirish
+     */
+    public void incrementDownloadCount() {
+        this.downloadCount = (this.downloadCount == null ? 0 : this.downloadCount) + 1;
+    }
+
+    /**
+     * Reytingni yangilash
+     */
+    public void updateRating(Double newRating) {
+        if (this.averageRating == null || this.ratingCount == null) {
+            this.averageRating = newRating;
+            this.ratingCount = 1;
+        } else {
+            double totalRating = this.averageRating * this.ratingCount;
+            this.ratingCount++;
+            this.averageRating = (totalRating + newRating) / this.ratingCount;
+        }
+    }
 
 }

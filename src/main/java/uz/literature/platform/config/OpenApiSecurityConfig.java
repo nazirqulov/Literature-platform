@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @SecurityScheme(
         name = "bearerAuth",                          // Bu nomni hamma joyda ishlatamiz
-        description = "JWT tokenni Bearer prefiksiz bilan kiriting eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...)",
+        description = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwidXNlcklkIjoxLCJzdWIiOiJnbG9iYWwiLCJpYXQiOjE3NzA3MTg3MzEsImV4cCI6MTc3MDgwNTEzMX0.63GFMComI6HNxz5DclMouNZb6pRrEbdW9LhbbskiyIo",
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT",

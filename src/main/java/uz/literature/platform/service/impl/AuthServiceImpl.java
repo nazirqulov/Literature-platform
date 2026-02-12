@@ -512,6 +512,8 @@
 
 package uz.literature.platform.service.impl;
 
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -531,6 +533,7 @@ import uz.literature.platform.entity.UserProfile;
 import uz.literature.platform.exception.BadRequestException;
 import uz.literature.platform.exception.ResourceNotFoundException;
 import uz.literature.platform.payload.request.*;
+import uz.literature.platform.payload.response.AuthResponse;
 import uz.literature.platform.payload.response.PendingRegistration;
 import uz.literature.platform.payload.response.TokenDTO;
 import uz.literature.platform.repository.UserProfileRepository;
