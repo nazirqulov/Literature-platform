@@ -22,4 +22,4 @@ RUN mkdir -p /app/logs && chmod -R 777 /app/logs
 EXPOSE 8080
 
 # Ilovani ishga tushirish (JVM flagi bilan vaqtni kafolatlaymiz)
-ENTRYPOINT ["java", "-Duser.timezone=Asia/Tashkent", "-jar", "app.jar", "--spring.profiles.active=prod"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Tashkent", "-jar", "app.jar"]
