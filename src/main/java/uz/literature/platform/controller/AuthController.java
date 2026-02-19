@@ -1,13 +1,17 @@
 package uz.literature.platform.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import retrofit2.http.HTTP;
 import uz.literature.platform.payload.request.*;
 import uz.literature.platform.payload.response.AuthResponse;
 import uz.literature.platform.payload.response.TokenDTO;
 import uz.literature.platform.security.JwtTokenProvider;
+import uz.literature.platform.service.impl.RecaptchaService;
 import uz.literature.platform.service.interfaces.AuthService;
 
 import java.util.HashMap;
@@ -23,11 +27,33 @@ public class AuthController {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    @PostMapping("/login")
+    private final RecaptchaService recaptchaService;
+
+        @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         TokenDTO response = authService.login(request);
         return ResponseEntity.ok(response);
     }
+//    @PostMapping("/login")
+//    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+//                                   HttpServletRequest httpServletRequest) {
+//
+//        if (request.getRecaptchaToken() == null || request.getRecaptchaToken().isBlank()) {
+//            return ResponseEntity.status(403).body("Missing reCAPTCHA token");
+//        }
+//
+//        boolean ok = recaptchaService.isValid(
+//                request.getRecaptchaToken(),
+//                httpServletRequest.getRemoteAddr()
+//        );
+//
+//        if (!ok) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bot activity detected");
+//        }
+//
+//        TokenDTO response = authService.login(request);
+//        return ResponseEntity.ok(response);
+//    }
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request) {
