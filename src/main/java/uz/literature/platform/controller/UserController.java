@@ -1,6 +1,9 @@
 package uz.literature.platform.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,6 +18,10 @@ import uz.literature.platform.repository.UserRepository;
 import uz.literature.platform.service.impl.UserServiceImpl;
 import uz.literature.platform.service.interfaces.UserService;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +35,9 @@ public class UserController {
     private final UserService userService;
     private final UserServiceImpl userServiceImpl;
     private final UserRepository userRepository;
+
+    @Value("${app.upload.dir:uploads/profiles}")
+    private String uploadDir;
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser() {
@@ -59,39 +69,21 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-
-    //    @GetMapping("/me/profile-image")
-//    public ResponseEntity<byte[]> getProfileImage(@AuthenticationPrincipal User user) {
-//        byte[] image = userService.getProfileImageBytes(user);
-//
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.IMAGE_JPEG) // yoki PNG
-//                .body(image);
-//    }
-//    @GetMapping(value = "/me/profile-image")
-//    public ResponseEntity<byte[]> getProfileImage() {
-//
-//        byte[] imageBytes = userService.getProfileImageBytes();
-//
-//        if (imageBytes == null) {
-//            return ResponseEntity.notFound().build();
-//        }
-//
-//        return ResponseEntity.ok()
-//                .contentType(userService.getProfileImageContentType())
-//                .body(imageBytes);
-//    }
     @GetMapping("/me/profile-image-url")
     public ResponseEntity<String> getProfileImageUrl() {
+
         User user = getCurrentUserEntity();
-        String filename = user.getUserProfile().getProfileImage(); // masalan: 2346170a-b2db-4f65-a69d-17dec83ce281.png
+
+        String filename = user.getUserProfile().getProfileImage();
 
         if (filename == null || filename.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        // static path orqali
-        return ResponseEntity.ok(filename);
+        String substring = filename.substring(9);
+
+
+        return ResponseEntity.ok(substring);
     }
 
     public User getCurrentUserEntity() {
@@ -104,5 +96,24 @@ public class UserController {
         String username = authentication.getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
+    }
+
+    @GetMapping("/profiles/{filename}")
+    public ResponseEntity<?> getImage(@PathVariable String filename) throws IOException {
+        Path filePath = Paths.get(uploadDir).resolve(filename).normalize();
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (!resource.exists() || !resource.isReadable()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String contentType = Files.probeContentType(filePath);
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 }
