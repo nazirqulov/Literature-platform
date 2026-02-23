@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import uz.literature.platform.entity.User;
 import uz.literature.platform.exception.ResourceNotFoundException;
 import uz.literature.platform.exception.UnauthorizedException;
+import uz.literature.platform.payload.request.UserRequestDTO;
 import uz.literature.platform.payload.response.UserResponse;
 import uz.literature.platform.repository.UserRepository;
 import uz.literature.platform.service.impl.UserServiceImpl;
@@ -22,8 +24,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static uz.literature.platform.service.impl.UserServiceImpl.getUser;
 
 @RestController
 @RequestMapping("/api")
@@ -39,6 +45,29 @@ public class UserController {
     @Value("${app.upload.dir:uploads/profiles}")
     private String uploadDir;
 
+
+        @GetMapping("/user/get-all")
+    public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "10") int size,
+                                                          @RequestParam(required = false) User.Role role,
+                                                          @RequestParam(required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate fromDate,
+                                                          @RequestParam(required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate toDate) {
+        List<UserResponse> users = userServiceImpl.getAllUsers(page, size, role, fromDate, toDate);
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/user/get-all-role")
+    public ResponseEntity<List<String>> getAllRoles() {
+        List<String> roles = userServiceImpl.getAllRoles();
+        return ResponseEntity.ok(roles);
+    }
+
+    @PostMapping("/user/create")
+    public ResponseEntity<UserResponse> createUser(@RequestBody UserRequestDTO request) {
+        UserResponse user = userService.createUser(request);
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser() {
         UserResponse user = userService.getCurrentUser();
@@ -48,6 +77,12 @@ public class UserController {
     @PutMapping("/update-profile")
     public ResponseEntity<UserResponse> updateProfile(@RequestBody UserResponse request) {
         UserResponse user = userService.updateProfile(request);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<UserResponse> update(@PathVariable Long id, @RequestBody UserResponse request) {
+        UserResponse user = userService.updateProfile(request, id);
         return ResponseEntity.ok(user);
     }
 
@@ -87,15 +122,7 @@ public class UserController {
     }
 
     public User getCurrentUserEntity() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedException("Foydalanuvchi autentifikatsiya qilinmagan");
-        }
-
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
+        return getUser(userRepository);
     }
 
     @GetMapping("/profiles/{filename}")
@@ -115,5 +142,15 @@ public class UserController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
+    }
+
+    @DeleteMapping("/user/delete/{id}")
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Foydalanuvchi o'chirildi");
+
+        return ResponseEntity.ok(response);
     }
 }
