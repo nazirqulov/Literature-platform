@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +22,9 @@ import uz.literature.platform.entity.UserProfile;
 import uz.literature.platform.exception.BadRequestException;
 import uz.literature.platform.exception.ResourceNotFoundException;
 import uz.literature.platform.exception.UnauthorizedException;
+import uz.literature.platform.payload.request.UserRequestDTO;
 import uz.literature.platform.payload.response.UserResponse;
+import uz.literature.platform.repository.UserProfileRepository;
 import uz.literature.platform.repository.UserRepository;
 import uz.literature.platform.service.interfaces.UserService;
 import uz.literature.platform.util.FileUploadUtil;
@@ -28,6 +33,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -35,6 +44,8 @@ import java.nio.file.Paths;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+    private final UserProfileRepository userProfileRepository;
 
     private final ModelMapper modelMapper;
 
@@ -57,14 +68,9 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
-    public String getCurrentUserProfileImage() {
-        User user = getCurrentUserEntitys(); // token orqali yoki SecurityContext orqali
-        UserProfile profile = user.getUserProfile();
-        return profile != null ? profile.getProfileImage() : null;
-    }
 
     private User getCurrentUserEntitys() {
-        // JWT orqali current user ni olish
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         return userRepository.findByUsername(username)
@@ -73,6 +79,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getCurrentUserEntity() {
+        return getUser(userRepository);
+    }
+
+    public static User getUser(UserRepository userRepository) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -84,33 +94,31 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
     }
 
-    //    @Override
-//    @Transactional
-//    public UserResponse updateProfile(UserResponse request) {
-//
-//        User user = getCurrentUserEntity();
-//
-//        UserProfile userProfile = user.getUserProfile();
-//
-//        if (request.getFullName() != null) {
-//            userProfile.setFullName(request.getFullName());
-//        }
-//
-//        if (request.getPhone() != null) {
-//            userProfile.setPhone(request.getPhone());
-//        }
-//
-//        User updatedUser = userRepository.save(user);
-//        UserResponse response = modelMapper.map(updatedUser, UserResponse.class);
-//        response.setRole(updatedUser.getRole().name());
-//
-//        return response;
-//    }
+
     @Override
     @Transactional
     public UserResponse updateProfile(UserResponse request) {
 
         User user = getCurrentUserEntity();
+        return getUserResponse(request, user);
+    }
+
+    @Override
+    public UserResponse updateProfile(UserResponse request, Long id) {
+
+        Optional<User> byId = userRepository.findById(id);
+
+        if (byId.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with id: " + id);
+
+        }
+
+        User user = byId.get();
+        return getUserResponse(request, user);
+    }
+
+    @NotNull
+    private UserResponse getUserResponse(UserResponse request, User user) {
         UserProfile profile = user.getUserProfile();
 
         if (request.getUsername() != null)
@@ -128,6 +136,10 @@ public class UserServiceImpl implements UserService {
         if (request.getProfileImage() != null)
             profile.setProfileImage(request.getProfileImage());
 
+        if (request.getRole() != null)
+            profile.getUser().setRole(User.Role.valueOf(request.getRole()));
+
+
         user.setUserProfile(profile);
 
         User updatedUser = userRepository.save(user);
@@ -136,22 +148,44 @@ public class UserServiceImpl implements UserService {
     }
 
 
+//    @NotNull
+//    private static UserResponse getUserResponse(User updatedUser, UserProfile profile) {
+//        UserResponse response = new UserResponse();
+//        response.setId(updatedUser.getId());
+//        response.setUsername(updatedUser.getUsername());
+//        response.setEmail(updatedUser.getEmail());
+//        response.setFullName(profile.getFullName());
+//        response.setPhone(profile.getPhone());
+//        response.setRole(updatedUser.getRole().name());
+//        response.setIsActive(updatedUser.getIsActive());
+//        response.setEmailVerified(updatedUser.getEmailVerified());
+//        response.setCreatedAt(updatedUser.getCreatedAt());
+//        response.setProfileImage(profile.getProfileImage());
+//        return response;
+//    }
+
     @NotNull
-    private static UserResponse getUserResponse(User updatedUser, UserProfile profile) {
+    private static UserResponse getUserResponse(User user, UserProfile profile) {
+
         UserResponse response = new UserResponse();
-        response.setId(updatedUser.getId());
-        response.setUsername(updatedUser.getUsername());
-        response.setEmail(updatedUser.getEmail());
-        response.setFullName(profile.getFullName());
-        response.setPhone(profile.getPhone());
-        response.setRole(updatedUser.getRole().name());
-        response.setIsActive(updatedUser.getIsActive());
-        response.setEmailVerified(updatedUser.getEmailVerified());
-        response.setCreatedAt(updatedUser.getCreatedAt());
-        response.setProfileImage(profile.getProfileImage());
+
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+
+        if (profile != null) {
+            response.setFullName(profile.getFullName());
+            response.setPhone(profile.getPhone());
+            response.setProfileImage(profile.getProfileImage());
+        }
+
+        response.setRole(user.getRole() != null ? user.getRole().name() : null);
+        response.setIsActive(user.getIsActive());
+        response.setEmailVerified(user.getEmailVerified());
+        response.setCreatedAt(user.getCreatedAt());
+
         return response;
     }
-
     @Override
     @Transactional
     public UserResponse uploadProfileImage(MultipartFile file) {
@@ -200,93 +234,89 @@ public class UserServiceImpl implements UserService {
     }
 
 
-//    @Override
-//    public byte[] getProfileImageBytes(User user1) {
-//
-//        UserResponse user = getCurrentUser();
-//
-//        if (user == null || user.getId() == null) {
-//            return null;
-//        }
-//
-//        // Foydalanuvchini bazadan olish
-//        User userEntity = userRepository.findById(user.getId())
-//                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
-//
-//        UserProfile userProfile = userEntity.getUserProfile();
-//        if (userProfile == null) {
-//            return null;
-//        }
-//
-//        String profileImagePath = userProfile.getProfileImage();
-//        if (profileImagePath == null || profileImagePath.isEmpty()) {
-//            return null;
-//        }
-//
-//        try {
-//            // Faylni o‘qish va byte[] ga aylantirish
-//            Path path = Paths.get(profileImagePath); // bu to‘liq path yoki rootdan relative path
-//            if (!Files.exists(path)) {
-//                return null; // Fayl mavjud bo‘lmasa
-//            }
-//            return Files.readAllBytes(path);
-//        } catch (IOException e) {
-//            // Hatolikni log qilishingiz mumkin
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
-//
-@Override
-public byte[] getProfileImageBytes() {
-    User currentUser = getCurrentUserEntitys();
-
-    if (currentUser == null || currentUser.getId() == null) {
-        throw new RuntimeException("User not authenticated");
-    }
-
-    User userEntity = userRepository.findById(currentUser.getId())
-            .orElseThrow(() -> new EntityNotFoundException(
-                    "User not found with id: " + currentUser.getId()
-            ));
-
-    UserProfile profile = userEntity.getUserProfile();
-    if (profile == null || profile.getProfileImage() == null) {
-        return null;
-    }
-
-    try {
-        Path path = Paths.get(profile.getProfileImage());
-
-        if (!Files.exists(path)) {
-            throw new RuntimeException("Image file not found: " + path);
-        }
-
-        return Files.readAllBytes(path);
-
-    } catch (IOException e) {
-        throw new RuntimeException("Error reading image file", e);
-    }
-}
     @Override
-    public MediaType getProfileImageContentType() {
-        User currentUser = getCurrentUserEntitys();
+    public List<UserResponse> getAllUsers(int page, int size, User.Role role, LocalDate fromDate, LocalDate toDate) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> usersPage;
 
-        User userEntity = userRepository.findById(currentUser.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (role != null && fromDate != null && toDate != null) {
+            usersPage = userRepository
+                    .findAllByRoleAndCreatedAtBetween(
+                            role,
+                            fromDate.atStartOfDay(),
+                            toDate.atStartOfDay().plusDays(1),
+                            pageable
+                    );
 
-        String imagePath = userEntity.getUserProfile().getProfileImage();
-        try {
-            Path path = Paths.get(imagePath);
-            String contentType = Files.probeContentType(path);
+        } else if (role != null) {
+            usersPage = userRepository.findAllByRole(role, pageable);
 
-            return MediaType.parseMediaType(
-                    contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_VALUE
-            );
+        } else if (fromDate != null && toDate != null) {
+            usersPage = userRepository
+                    .findAllByCreatedAtBetween(
+                            fromDate.atStartOfDay(),
+                            toDate.atStartOfDay().plusDays(1),
+                            pageable
+                    );
 
-        } catch (IOException e) {
-            return MediaType.APPLICATION_OCTET_STREAM;
+        } else {
+            usersPage = userRepository.findAll(pageable);
         }
+
+        return usersPage.stream()
+                .map(user -> getUserResponse(user, user.getUserProfile()))
+                .toList();
     }
 
+    @Override
+    public void deleteUser(Long id) {
+        Optional<User> byId = userRepository.findById(id);
+        if (byId.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with id: " + id);
+        }
+
+        User user = byId.get();
+        user.setDeleted(true);
+        user.setIsActive(false);
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserResponse createUser(UserRequestDTO request) {
+
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Bu username allaqachon mavjud");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Bu email allaqachon ro'yxatdan o'tgan");
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(request.getRole() != null ? User.Role.valueOf(request.getRole()) : User.Role.USER);
+        user.setIsActive(true);
+        user.setEmailVerified(false);
+        user.setEmail(request.getEmail());
+
+        UserProfile userProfile = new UserProfile();
+        userProfile.setFullName(request.getFullName());
+        userProfile.setPhone(request.getPhone());
+        userProfile.setProfileImage(request.getProfileImage());
+        userProfile.setUser(user);
+
+        user.setUserProfile(userProfile);
+
+        User savedUser = userRepository.save(user);
+
+        userProfileRepository.save(userProfile);
+
+        return modelMapper.map(savedUser, UserResponse.class);
+    }
+
+    public List<String> getAllRoles() {
+        return Stream.of(User.Role.values())
+                .map(Enum::name)
+                .toList();
+    }
 }

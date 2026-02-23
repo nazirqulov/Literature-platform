@@ -87,9 +87,6 @@ public class Book extends BaseLongEntity {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private Set<UserBookProgress> userProgresses = new HashSet<>();
 
-    /**
-     * Mualliflar ro'yxatini string sifatida qaytarish
-     */
     public String getAuthorsAsString() {
         if (authors == null || authors.isEmpty()) {
             return "Noma'lum muallif";
@@ -100,23 +97,16 @@ public class Book extends BaseLongEntity {
                 .orElse("Noma'lum muallif");
     }
 
-    /**
-     * Kitobni ko'rish sonini oshirish
-     */
+
     public void incrementViewCount() {
         this.viewCount = (this.viewCount == null ? 0 : this.viewCount) + 1;
     }
 
-    /**
-     * Yuklab olish sonini oshirish
-     */
+
     public void incrementDownloadCount() {
         this.downloadCount = (this.downloadCount == null ? 0 : this.downloadCount) + 1;
     }
 
-    /**
-     * Reytingni yangilash
-     */
     public void updateRating(Double newRating) {
         if (this.averageRating == null || this.ratingCount == null) {
             this.averageRating = newRating;
