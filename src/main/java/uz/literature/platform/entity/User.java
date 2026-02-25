@@ -22,8 +22,8 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
-@SQLRestriction(value = "deleted=false")
+@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ? and is_active = true")
+@SQLRestriction("deleted=false and is_active=true")
 public class User extends BaseLongEntity implements UserDetails {
 
     @Column(nullable = false, unique = true)

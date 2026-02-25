@@ -8,11 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import uz.literature.platform.entity.User;
 import uz.literature.platform.entity.UserProfile;
-import uz.literature.platform.exception.ResourceNotFoundException;
 import uz.literature.platform.repository.UserRepository;
 
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Created by: Barkamol
@@ -27,14 +25,20 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-     importUser();
+        importUser();
+        importCategory();
+    }
+
+    @PostConstruct
+    private void importCategory() {
+
     }
 
     @PostConstruct
     private void importUser() {
         String adminUsername = "admin123";
         String adminEmail = "admin@gmail.com";
-        Optional<User> existingAdmin = userRepository.findByUsername(adminUsername);
+        Optional<Object> existingAdmin = userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(adminUsername);
 
         if (existingAdmin.isPresent()) {
             log.info("Admin user already exists");
@@ -50,8 +54,6 @@ public class DataLoader implements CommandLineRunner {
 
         UserProfile profile = new UserProfile();
         profile.setUser(admin);
-        profile.setUsername(adminUsername);
-        profile.setEmail(adminEmail);
         profile.setFullName("Administrator");
 
         admin.setUserProfile(profile);

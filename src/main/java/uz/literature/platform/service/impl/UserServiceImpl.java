@@ -8,7 +8,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,10 +28,6 @@ import uz.literature.platform.repository.UserRepository;
 import uz.literature.platform.service.interfaces.UserService;
 import uz.literature.platform.util.FileUploadUtil;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +54,6 @@ public class UserServiceImpl implements UserService {
         UserResponse response = modelMapper.map(user, UserResponse.class);
         UserProfile userProfile = user.getUserProfile();
         response.setPhone(userProfile.getPhone());
-        response.setEmail(userProfile.getEmail());
         response.setRole(user.getRole().name());
         response.setFullName(userProfile.getFullName());
 
@@ -73,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
+        return (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(username)
                 .orElseThrow(() -> new RuntimeException("Foydalanuvchi topilmadi"));
     }
 
@@ -90,7 +84,7 @@ public class UserServiceImpl implements UserService {
         }
 
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
+        return (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
     }
 
@@ -106,7 +100,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse updateProfile(UserResponse request, Long id) {
 
-        Optional<User> byId = userRepository.findById(id);
+        Optional<User> byId = userRepository.findByIdAndIsActiveTrueAndDeletedFalse(id);
 
         if (byId.isEmpty()) {
             throw new ResourceNotFoundException("User not found with id: " + id);
@@ -186,6 +180,7 @@ public class UserServiceImpl implements UserService {
 
         return response;
     }
+
     @Override
     @Transactional
     public UserResponse uploadProfileImage(MultipartFile file) {
@@ -226,7 +221,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private User getUser(String username) {
-        return userRepository.findByUsername(username)
+        return (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(username)
                 .orElseThrow(() -> {
                     log.warn("User not found with username: {}", username);
                     return new EntityNotFoundException("User not found with username: " + username);
@@ -241,7 +236,7 @@ public class UserServiceImpl implements UserService {
 
         if (role != null && fromDate != null && toDate != null) {
             usersPage = userRepository
-                    .findAllByRoleAndCreatedAtBetween(
+                    .findAllByRoleAndCreatedAtBetweenAndIsActiveTrueAndDeletedFalse(
                             role,
                             fromDate.atStartOfDay(),
                             toDate.atStartOfDay().plusDays(1),
@@ -249,7 +244,7 @@ public class UserServiceImpl implements UserService {
                     );
 
         } else if (role != null) {
-            usersPage = userRepository.findAllByRole(role, pageable);
+            usersPage = userRepository.findAllByRoleAndIsActiveTrueAndDeletedFalse(role, pageable);
 
         } else if (fromDate != null && toDate != null) {
             usersPage = userRepository
@@ -270,7 +265,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        Optional<User> byId = userRepository.findById(id);
+        Optional<User> byId = userRepository.findByIdAndIsActiveTrueAndDeletedFalse(id);
         if (byId.isEmpty()) {
             throw new ResourceNotFoundException("User not found with id: " + id);
         }
@@ -284,10 +279,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(UserRequestDTO request) {
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsernameAndIsActiveTrueAndDeletedFalse(request.getUsername())) {
             throw new BadRequestException("Bu username allaqachon mavjud");
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailAndIsActiveTrueAndDeletedFalse(request.getEmail())) {
             throw new BadRequestException("Bu email allaqachon ro'yxatdan o'tgan");
         }
 

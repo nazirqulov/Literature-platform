@@ -16,6 +16,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     boolean existsByNameIgnoreCase(String attr0);
 
+    Optional<Category> findByIdAndDeletedFalse(Long id);
+
 
     @Query("select c from Category c where c.subCategories is not empty")
     Page<Category> findRootCategories(Pageable pageable);
@@ -23,10 +25,13 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 //    Optional<Object> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     @Query("""
-   select sc from SubCategory sc
-   where lower(sc.name) like lower(concat('%', :key, '%'))
-      or lower(sc.description) like lower(concat('%', :key, '%'))
-""")
+               select sc from SubCategory sc
+               where lower(sc.name) like lower(concat('%', :key, '%'))
+                  or lower(sc.description) like lower(concat('%', :key, '%'))
+            """)
     Page<SubCategory> search(@Param("key") String key, Pageable pageable);
+
+    boolean existsByNameIgnoreCaseAndDeletedFalse(String categoryName);
+
 
 }

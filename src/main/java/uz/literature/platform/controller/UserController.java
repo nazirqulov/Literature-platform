@@ -7,13 +7,9 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.literature.platform.entity.User;
-import uz.literature.platform.exception.ResourceNotFoundException;
-import uz.literature.platform.exception.UnauthorizedException;
 import uz.literature.platform.payload.request.UserRequestDTO;
 import uz.literature.platform.payload.response.UserResponse;
 import uz.literature.platform.repository.UserRepository;
@@ -46,7 +42,7 @@ public class UserController {
     private String uploadDir;
 
 
-        @GetMapping("/user/get-all")
+    @GetMapping("/user/get-all")
     public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam(defaultValue = "0") int page,
                                                           @RequestParam(defaultValue = "10") int size,
                                                           @RequestParam(required = false) User.Role role,

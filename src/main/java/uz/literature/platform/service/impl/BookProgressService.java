@@ -294,7 +294,7 @@ public class BookProgressService {
 
     // Helper methods
     private User findUserByUsername(String username) {
-        return userRepository.findByUsername(username)
+        return (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
     }
 

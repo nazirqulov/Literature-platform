@@ -65,7 +65,7 @@
 /// /        String password = request.getPassword();
 /// /        String username = request.getUsernameOrEmail();
 /// /
-/// /        User user = userRepository.findByUsername(username)
+/// /        User user = userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(username)
 /// /                .orElseThrow(() -> new EntityNotFoundException("User not found with username : " + username));
 /// /
 /// /        String encodedPassword = user.getPassword();
@@ -312,7 +312,7 @@
 //    public UserDetails loadUserByUsername(String usernameOrEmail) {
 //        log.info("loadUserByUsername chaqirildi: {}", usernameOrEmail);
 //
-//        User user = userRepository.findByUsername(usernameOrEmail)
+//        User user = userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(usernameOrEmail)
 //                .orElse(userRepository.findByEmail(usernameOrEmail)
 //                        .orElseThrow(() -> new UsernameNotFoundException(
 //                                "Foydalanuvchi topilmadi: " + usernameOrEmail)));
@@ -339,11 +339,11 @@
 //    public TokenDTO login(LoginRequest request) {
 //        String usernameOrEmail = request.getUsernameOrEmail();
 //
-//        Optional<User> byUsername = userRepository.findByUsername(usernameOrEmail);
+//        Optional<User> byUsername = userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(usernameOrEmail);
 //
 //        User userDetails = byUsername.get();
 //
-//        User user = userRepository.findByUsername(userDetails.getUsername())
+//        User user = userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(userDetails.getUsername())
 //                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 //
 //        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -512,8 +512,6 @@
 
 package uz.literature.platform.service.impl;
 
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -533,7 +531,6 @@ import uz.literature.platform.entity.UserProfile;
 import uz.literature.platform.exception.BadRequestException;
 import uz.literature.platform.exception.ResourceNotFoundException;
 import uz.literature.platform.payload.request.*;
-import uz.literature.platform.payload.response.AuthResponse;
 import uz.literature.platform.payload.response.PendingRegistration;
 import uz.literature.platform.payload.response.TokenDTO;
 import uz.literature.platform.repository.UserProfileRepository;
@@ -582,7 +579,7 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
 //    public UserDetails loadUserByUsername(String usernameOrEmail) {
 //        log.info("loadUserByUsername chaqirildi: {}", usernameOrEmail);
 //
-//        User user = userRepository.findByUsername(usernameOrEmail)
+//        User user = userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(usernameOrEmail)
 //                .orElse(userRepository.findByEmail(usernameOrEmail)
 //                        .orElseThrow(() -> new UsernameNotFoundException(
 //                                "Foydalanuvchi topilmadi: " + usernameOrEmail)));
@@ -611,12 +608,12 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
 
         // Agar @ belgisi bo'lsa, bu email - avval email bo'yicha qidirish
         if (usernameOrEmail.contains("@")) {
-            user = userRepository.findByEmail(usernameOrEmail)
+            user = (User) userRepository.findByEmailAndIsActiveTrueAndDeletedFalse(usernameOrEmail)
                     .orElseThrow(() -> new UsernameNotFoundException(
                             "Foydalanuvchi topilmadi: " + usernameOrEmail));
         } else {
             // Aks holda username bo'yicha qidirish, topilmasa email bo'yicha
-            user = userRepository.findByUsername(usernameOrEmail)
+            user = (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(usernameOrEmail)
                     .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
                             .orElseThrow(() -> new UsernameNotFoundException(
                                     "Foydalanuvchi topilmadi: " + usernameOrEmail)));
@@ -645,11 +642,11 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
     public TokenDTO login(LoginRequest request) {
         String usernameOrEmail = request.getUsernameOrEmail();
 
-        Optional<User> byUsername = userRepository.findByUsername(usernameOrEmail);
+        Optional<Object> byUsername = userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(usernameOrEmail);
 
-        User userDetails = byUsername.get();
+        User userDetails = (User) byUsername.get();
 
-        User user = userRepository.findByUsername(userDetails.getUsername())
+        User user = (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(userDetails.getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -678,10 +675,10 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
     @Transactional
     public String register(RegisterRequest request) {
         // 1. Avval bazada mavjudligini tekshirish
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsernameAndIsActiveTrueAndDeletedFalse(request.getUsername())) {
             throw new BadRequestException("Bu username allaqachon mavjud");
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailAndIsActiveTrueAndDeletedFalse(request.getEmail())) {
             throw new BadRequestException("Bu email allaqachon ro'yxatdan o'tgan");
         }
 
@@ -760,8 +757,6 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
 
         // 6. UserProfile yaratish
         UserProfile userProfile = new UserProfile();
-        userProfile.setUsername(pendingReg.getUsername());
-        userProfile.setEmail(pendingReg.getEmail());
         userProfile.setUser(savedUser);
         userProfileRepository.save(userProfile);
 
@@ -814,7 +809,7 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
     @Override
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = (User) userRepository.findByEmailAndIsActiveTrueAndDeletedFalse(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("Bu email bilan foydalanuvchi topilmadi"));
 
         String resetToken = UUID.randomUUID().toString();

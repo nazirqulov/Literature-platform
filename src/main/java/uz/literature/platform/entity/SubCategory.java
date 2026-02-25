@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import uz.literature.platform.entity.base.BaseLongEntity;
 
 import java.util.HashSet;
@@ -19,8 +21,13 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "subcategories")
-public class SubCategory  extends BaseLongEntity {
+@Table(
+        name = "subcategories",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"category_id", "name"})
+)
+@SQLDelete(sql = "UPDATE subcategories SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class SubCategory extends BaseLongEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
