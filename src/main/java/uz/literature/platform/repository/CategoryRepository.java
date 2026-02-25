@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import uz.literature.platform.entity.Category;
 import uz.literature.platform.entity.SubCategory;
 
-import java.lang.ScopedValue;
 import java.util.Optional;
 
 @Repository
@@ -26,10 +25,10 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 //    Optional<Object> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     @Query("""
-   select sc from SubCategory sc
-   where lower(sc.name) like lower(concat('%', :key, '%'))
-      or lower(sc.description) like lower(concat('%', :key, '%'))
-""")
+               select sc from SubCategory sc
+               where lower(sc.name) like lower(concat('%', :key, '%'))
+                  or lower(sc.description) like lower(concat('%', :key, '%'))
+            """)
     Page<SubCategory> search(@Param("key") String key, Pageable pageable);
 
     boolean existsByNameIgnoreCaseAndDeletedFalse(String categoryName);
