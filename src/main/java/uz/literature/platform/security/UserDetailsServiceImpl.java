@@ -21,7 +21,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(usernameOrEmail)
+        User user = (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(usernameOrEmail)
                 .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
                         .orElseThrow(() -> new UsernameNotFoundException("Foydalanuvchi topilmadi: " + usernameOrEmail)));
         

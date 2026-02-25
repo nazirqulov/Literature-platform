@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 import uz.literature.platform.entity.base.BaseLongEntity;
 
@@ -17,8 +18,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SQLDelete(sql = "update category set deleted=true where id=?")
-@Where(clause = "deleted = false")
+@SQLDelete(sql = "UPDATE categories SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class Category  extends BaseLongEntity {
 
     @Column(nullable = false, unique = true)
@@ -27,7 +28,7 @@ public class Category  extends BaseLongEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private Set<SubCategory> subCategories = new HashSet<>();
 
 }

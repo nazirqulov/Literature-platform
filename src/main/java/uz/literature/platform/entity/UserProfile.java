@@ -18,15 +18,9 @@ import uz.literature.platform.entity.base.BaseLongEntity;
 @Setter
 @Entity(name = "user_profiles")
 @SQLDelete(sql = "UPDATE user_profiles SET deleted = true WHERE id = ?")
-@SQLRestriction(value = "deleted=false")
+@SQLRestriction("deleted=false")
 @FieldNameConstants
 public class UserProfile extends BaseLongEntity {
-
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(nullable = false, unique = true)
-    private String username;
 
     @Column(name = "full_name")
     private String fullName;

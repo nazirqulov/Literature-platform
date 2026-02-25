@@ -36,7 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryDataDto createCategoryWithSubCategories(CategoryCreateRequestDto dto) {
 
-        if (categoryRepository.existsByNameIgnoreCase(dto.getCategoryName())) {
+        if (categoryRepository.existsByNameIgnoreCaseAndDeletedFalse(dto.getCategoryName())) {
             throw new BadRequestException("Category already exists");
         }
 
@@ -48,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
             for (ParentData subDto : dto.getSubCategories()) {
                 if (subDto.getName() == null || subDto.getName().isBlank()) continue;
 
-                if (subCategoryRepository.existsByNameIgnoreCase(subDto.getName())) {
+                if (subCategoryRepository.existsByNameIgnoreCaseAndDeletedFalse(subDto.getName())) {
                     throw new BadRequestException("SubCategory '" + subDto.getName() + "' already exists");
                 }
 
@@ -83,7 +83,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = findById(id);
 
         if (!category.getName().equals(dto.getCategoryName()) &&
-                categoryRepository.existsByNameIgnoreCase(dto.getCategoryName())) {
+                categoryRepository.existsByNameIgnoreCaseAndDeletedFalse(dto.getCategoryName())) {
             throw new BadRequestException("Duplicate category name");
         }
 
@@ -120,7 +120,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private Category findById(Long id) {
-        return categoryRepository.findById(id)
+      return   categoryRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
     }
 
@@ -356,10 +356,10 @@ public class CategoryServiceImpl implements CategoryService {
             throw new BadRequestException("Category data is null");
         }
 
-        Category category = categoryRepository.findById(dto.getCategoryId())
+        Category category = categoryRepository.findByIdAndDeletedFalse(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id " + dto.getCategoryId()));
 
-        boolean exists = subCategoryRepository.existsByNameIgnoreCase(dto.getParentName());
+        boolean exists = subCategoryRepository.existsByNameIgnoreCaseAndDeletedFalse(dto.getParentName());
         if (exists) {
             throw new BadRequestException("SubCategory with this name already exists");
         }

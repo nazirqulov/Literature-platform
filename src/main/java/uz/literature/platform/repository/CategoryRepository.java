@@ -9,12 +9,15 @@ import org.springframework.stereotype.Repository;
 import uz.literature.platform.entity.Category;
 import uz.literature.platform.entity.SubCategory;
 
+import java.lang.ScopedValue;
 import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     boolean existsByNameIgnoreCase(String attr0);
+
+    Optional<Category> findByIdAndDeletedFalse(Long id);
 
 
     @Query("select c from Category c where c.subCategories is not empty")
@@ -28,5 +31,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
       or lower(sc.description) like lower(concat('%', :key, '%'))
 """)
     Page<SubCategory> search(@Param("key") String key, Pageable pageable);
+
+    boolean existsByNameIgnoreCaseAndDeletedFalse(String categoryName);
+
 
 }

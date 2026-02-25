@@ -4,13 +4,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.DefaultClaims;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -23,7 +20,6 @@ import uz.literature.platform.repository.UserRepository;
 import uz.literature.platform.service.JwtTokenProperties;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
@@ -137,7 +133,7 @@ public class JwtTokenProvider {
 
         String username = extractUsername(refreshToken);
 
-        User user = userRepository.findByUsername(username)
+        User user = (User) userRepository.findByUsernameAndIsActiveTrueAndDeletedFalse(username)
                 .orElseThrow(() -> new BadRequestException("User topilmadi"));
 
         String newAccessToken = generateAccessToken(user);

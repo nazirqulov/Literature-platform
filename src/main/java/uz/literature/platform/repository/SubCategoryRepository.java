@@ -20,4 +20,5 @@ public interface SubCategoryRepository extends JpaRepository<SubCategory, Long> 
 """)
     Page<SubCategory> search(@Param("key") String key, Pageable pageable);
 
+    boolean existsByNameIgnoreCaseAndDeletedFalse(String name);
 }
