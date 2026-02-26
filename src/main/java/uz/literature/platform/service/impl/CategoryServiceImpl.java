@@ -138,6 +138,7 @@ public class CategoryServiceImpl implements CategoryService {
         List<CategoryDTO> children = hasChildren
                 ? subs.stream().map(child -> {
             CategoryDTO childDto = new CategoryDTO();
+            childDto.setId(child.getId());
             childDto.setName(child.getName());
             childDto.setDescription(child.getDescription());
             return childDto;

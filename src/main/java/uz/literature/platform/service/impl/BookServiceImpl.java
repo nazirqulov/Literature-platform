@@ -18,7 +18,6 @@ import uz.literature.platform.payload.request.BookCreateRequest;
 import uz.literature.platform.payload.response.BookResponse;
 import uz.literature.platform.payload.response.CategoryResponse;
 import uz.literature.platform.repository.BookRepository;
-import uz.literature.platform.repository.CategoryRepository;
 import uz.literature.platform.repository.FavoriteRepository;
 import uz.literature.platform.repository.SubCategoryRepository;
 import uz.literature.platform.service.interfaces.BookService;
@@ -32,8 +31,6 @@ import java.util.stream.Collectors;
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
-
-    private final CategoryRepository categoryRepository;
 
     private final FavoriteRepository favoriteRepository;
 
