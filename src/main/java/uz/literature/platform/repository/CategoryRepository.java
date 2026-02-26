@@ -14,15 +14,12 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-    boolean existsByNameIgnoreCase(String attr0);
-
     Optional<Category> findByIdAndDeletedFalse(Long id);
 
 
-    @Query("select c from Category c where c.subCategories is not empty")
+    //    @Query("select c from Category c where c.subCategories is not empty")
+    @Query("select c from Category c left join fetch c.subCategories")
     Page<Category> findRootCategories(Pageable pageable);
-
-//    Optional<Object> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     @Query("""
                select sc from SubCategory sc

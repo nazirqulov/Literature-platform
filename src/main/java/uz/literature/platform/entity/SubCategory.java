@@ -29,7 +29,7 @@ import java.util.Set;
 @SQLRestriction("deleted = false")
 public class SubCategory extends BaseLongEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(columnDefinition = "TEXT")

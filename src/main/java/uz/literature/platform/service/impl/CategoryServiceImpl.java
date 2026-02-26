@@ -19,6 +19,7 @@ import uz.literature.platform.repository.CategoryRepository;
 import uz.literature.platform.repository.SubCategoryRepository;
 import uz.literature.platform.service.interfaces.CategoryService;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -120,7 +121,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private Category findById(Long id) {
-      return   categoryRepository.findByIdAndDeletedFalse(id)
+        return categoryRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
     }
 
@@ -129,20 +130,20 @@ public class CategoryServiceImpl implements CategoryService {
         dto.setId(c.getId());
         dto.setName(c.getName());
         dto.setDescription(c.getDescription());
-        dto.setHasChildren(!c.getSubCategories().isEmpty());
 
-        if (!c.getSubCategories().isEmpty()) {
-            List<CategoryDTO> childrenDto = c.getSubCategories().stream()
-                    .map(child -> {
-                        CategoryDTO childDto = new CategoryDTO();
-                        childDto.setName(child.getName());
-                        childDto.setDescription(child.getDescription());
-                        return childDto;
-                    }).toList();
+        var subs = c.getSubCategories();
+        boolean hasChildren = subs != null && !subs.isEmpty();
+        dto.setHasChildren(hasChildren);
 
-            dto.setChildren(childrenDto);
-        }
-
+        List<CategoryDTO> children = hasChildren
+                ? subs.stream().map(child -> {
+            CategoryDTO childDto = new CategoryDTO();
+            childDto.setName(child.getName());
+            childDto.setDescription(child.getDescription());
+            return childDto;
+        }).toList()
+                : Collections.emptyList();
+        dto.setChildren(children);
         return dto;
     }
 
@@ -336,13 +337,13 @@ public class CategoryServiceImpl implements CategoryService {
 //
 //        categoryRepository.delete(category);
 //    }
-
     @Override
     public Page<CategoryDTO> searchByName(String name, Pageable pageable) {
         return subCategoryRepository.search(name, pageable)
                 .map(this::mapToDto);
     }
-//
+
+    //
 //    @Override
 //    public List<CategoryDataDto> getChildren(Long parentId) {
 //        return categoryRepository.findByParent_Id(parentId)
