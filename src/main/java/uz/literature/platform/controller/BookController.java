@@ -25,7 +25,7 @@ public class BookController {
     private final BookService bookService;
 
 
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<Page<BookResponse>> getAllBooks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -98,7 +98,7 @@ public class BookController {
         return ResponseEntity.ok(books);
     }
 
-    @PostMapping
+    @PostMapping("/create")
 //    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> createBook(@Valid @RequestBody BookCreateRequest request) {
         BookResponse book = bookService.createBook(request);
@@ -125,7 +125,7 @@ public class BookController {
 //    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> uploadCoverImage(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
+            @PathVariable MultipartFile file) {
         BookResponse book = bookService.uploadCoverImage(id, file);
         return ResponseEntity.ok(book);
     }
@@ -134,7 +134,7 @@ public class BookController {
 //    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> uploadPdfFile(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
+            @PathVariable MultipartFile file) {
         BookResponse book = bookService.uploadPdfFile(id, file);
         return ResponseEntity.ok(book);
     }

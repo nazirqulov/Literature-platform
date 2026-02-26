@@ -18,6 +18,7 @@ import java.util.List;
  * Created by: Barkamol
  * DateTime: 2/21/2026 5:06 PM
  */
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/authors")
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class AuthorController {
 
     private final AuthorService authorService;
 
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<?> getAllAuthors() {
 
         List<AuthorResponse> authors = authorService.getAllAuthors();
