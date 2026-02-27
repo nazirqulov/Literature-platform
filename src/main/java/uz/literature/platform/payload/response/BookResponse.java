@@ -3,6 +3,7 @@ package uz.literature.platform.payload.response;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -12,8 +13,8 @@ public class BookResponse {
     private String title;
     private String description;
     private AuthorResponse author;
-    private CategoryResponse category;
-    private String subCategoryName;
+    private List<CategoryResponse> categories;   // ✅ bir nechta
+    private List<String> subCategoryName;
     private String isbn;
     private Integer publishedYear;
     private String publisher;

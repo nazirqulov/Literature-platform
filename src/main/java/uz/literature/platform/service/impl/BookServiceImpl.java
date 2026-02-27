@@ -8,22 +8,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import uz.literature.platform.entity.Book;
-import uz.literature.platform.entity.Category;
-import uz.literature.platform.entity.SubCategory;
-import uz.literature.platform.entity.User;
+import uz.literature.platform.entity.*;
 import uz.literature.platform.exception.BadRequestException;
 import uz.literature.platform.exception.ResourceNotFoundException;
 import uz.literature.platform.payload.request.BookCreateRequest;
 import uz.literature.platform.payload.response.BookResponse;
 import uz.literature.platform.payload.response.CategoryResponse;
+import uz.literature.platform.repository.AuthorRepository;
 import uz.literature.platform.repository.BookRepository;
 import uz.literature.platform.repository.FavoriteRepository;
 import uz.literature.platform.repository.SubCategoryRepository;
 import uz.literature.platform.service.interfaces.BookService;
 import uz.literature.platform.util.FileUploadUtil;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,12 +38,18 @@ public class BookServiceImpl implements BookService {
     private final ModelMapper modelMapper;
 
     private final SubCategoryRepository subCategoryRepository;
+    private final AuthorRepository authorRepository;
 
-    private FileUploadUtil fileUploadUtil;
+    private final FileUploadUtil fileUploadUtil;
 
     @Override
     @Transactional
     public BookResponse createBook(BookCreateRequest request) {
+
+        Book existingBook = bookRepository.findByTitleAndIsActiveTrue(request.getTitle());
+        if (existingBook != null) {
+            throw new BadRequestException("Bunday nomli kitob allaqachon mavjud");
+        }
 
         Book book = new Book();
         book.setTitle(request.getTitle());
@@ -55,14 +62,16 @@ public class BookServiceImpl implements BookService {
         book.setIsFeatured(request.getIsFeatured());
         book.setIsActive(true);
 
-        // Set categories
-        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-            Long subCategoryId = request.getCategoryIds().iterator().next();
+        if (request.getSubCategoryIds() != null && !request.getSubCategoryIds().isEmpty()) {
 
-            SubCategory subCategory = subCategoryRepository.findById(subCategoryId)
-                    .orElseThrow(() -> new ResourceNotFoundException("SubCategory topilmadi"));
+            Set<SubCategory> subs =
+                    new HashSet<>(subCategoryRepository.findAllById(request.getSubCategoryIds()));
 
-            book.setSubCategory(subCategory);
+            if (subs.size() != request.getSubCategoryIds().size()) {
+                throw new BadRequestException("SubCategoryIds ichida mavjud bo'lmagan ID bor");
+            }
+
+            book.getSubCategories().addAll(subs);
         }
 
 
@@ -73,9 +82,9 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public BookResponse updateBook(Long id, BookCreateRequest request) {
+
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Kitob topilmadi"));
-
 
         book.setTitle(request.getTitle());
         book.setDescription(request.getDescription());
@@ -84,21 +93,58 @@ public class BookServiceImpl implements BookService {
         book.setPublisher(request.getPublisher());
         book.setLanguage(request.getLanguage());
         book.setPageCount(request.getPageCount());
-        book.setIsFeatured(request.getIsFeatured());
 
-        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-            Long subCategoryId = request.getCategoryIds().iterator().next();
-
-            SubCategory subCategory = subCategoryRepository.findById(subCategoryId)
-                    .orElseThrow(() -> new ResourceNotFoundException("SubCategory topilmadi"));
-
-            book.setSubCategory(subCategory);
+        if (request.getIsFeatured() != null) {
+            book.setIsFeatured(request.getIsFeatured());
         }
 
+        if (request.getAuthorId() != null) {
+            Author author = authorRepository.findById(request.getAuthorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Muallif topilmadi"));
+            book.setAuthors(new HashSet<>(Set.of(author)));        }
 
-        Book updatedBook = bookRepository.save(book);
-        return mapToResponse(updatedBook, null);
+        if (request.getSubCategoryIds() != null && !request.getSubCategoryIds().isEmpty()) {
+
+            Set<SubCategory> subs =
+                    new HashSet<>(subCategoryRepository.findAllById(request.getSubCategoryIds()));
+
+            if (subs.size() != request.getSubCategoryIds().size()) {
+                throw new BadRequestException("SubCategoryIds ichida mavjud bo'lmagan ID bor");
+            }
+
+            book.getSubCategories().addAll(subs);
+        }
+        Book updated = bookRepository.save(book);
+        return mapToResponse(updated, null);
     }
+//    @Transactional
+//    public BookResponse updateBook(Long id, BookCreateRequest request) {
+//        Book book = bookRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("Kitob topilmadi"));
+//
+//
+//        book.setTitle(request.getTitle());
+//        book.setDescription(request.getDescription());
+//        book.setIsbn(request.getIsbn());
+//        book.setPublishedYear(request.getPublishedYear());
+//        book.setPublisher(request.getPublisher());
+//        book.setLanguage(request.getLanguage());
+//        book.setPageCount(request.getPageCount());
+//        book.setIsFeatured(request.getIsFeatured());
+//
+//        if (request.getSubCategoryIds() != null && !request.getSubCategoryIds().isEmpty()) {
+//            Long subCategoryId = request.getSubCategoryIds().iterator().next();
+//
+//            SubCategory subCategory = subCategoryRepository.findById(subCategoryId)
+//                    .orElseThrow(() -> new ResourceNotFoundException("SubCategory topilmadi"));
+//
+//            book.setSubCategory(subCategory);
+//        }
+//
+//
+//        Book updatedBook = bookRepository.save(book);
+//        return mapToResponse(updatedBook, null);
+//    }
 
     @Override
     public BookResponse getBookById(Long id) {
@@ -236,33 +282,84 @@ public class BookServiceImpl implements BookService {
         bookRepository.save(book);
     }
 
+    //    private BookResponse mapToResponse(Book book, User currentUser) {
+//
+//        BookResponse response = modelMapper.map(book, BookResponse.class);
+//
+//        // SubCategory -> Category
+//        if (book.getSubCategories() != null && !book.getSubCategories().isEmpty()) {
+//
+//            SubCategory sub = book.getSubCategories().iterator().next();
+//            Category parent = sub.getCategory();
+//
+//            CategoryResponse catResponse = modelMapper.map(parent, CategoryResponse.class);
+//
+//            // shu kategoriya ichidagi barcha kitoblar soni
+//            long booksCount = parent.getSubCategories().stream()
+//                    .flatMap(sc -> sc.getBooks().stream())
+//                    .count();
+//
+//            catResponse.setBooksCount((int) booksCount);
+//
+//            response.setCategory(catResponse); // BookResponse da bitta category bo‘lishi kerak
+//            response.setSubCategoryName(sub.getName());
+//        }
+//
+//        // favorite tekshirish
+//        if (currentUser != null) {
+//            boolean isFavorite = favoriteRepository
+//                    .existsByUserIdAndBookId(currentUser.getId(), book.getId());
+//            response.setIsFavorite(isFavorite);
+//        } else {
+//            response.setIsFavorite(false);
+//        }
+//
+//        return response;
+//    }
     private BookResponse mapToResponse(Book book, User currentUser) {
 
         BookResponse response = modelMapper.map(book, BookResponse.class);
 
-        // SubCategory -> Category
-        if (book.getSubCategory() != null) {
+        if (book.getSubCategories() != null && !book.getSubCategories().isEmpty()) {
 
-            SubCategory sub = book.getSubCategory();
-            Category parent = sub.getCategory();
+            // 1) Subcategory nomlari
+            List<String> subNames = book.getSubCategories().stream()
+                    .map(SubCategory::getName)
+                    .distinct()
+                    .toList();
+            response.setSubCategoryName(subNames);
 
-            CategoryResponse catResponse = modelMapper.map(parent, CategoryResponse.class);
+            // 2) Category lar ro'yxati (distinct)
+            List<Category> categories = book.getSubCategories().stream()
+                    .map(SubCategory::getCategory)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
 
-            // shu kategoriya ichidagi barcha kitoblar soni
-            long booksCount = parent.getSubCategories().stream()
-                    .flatMap(sc -> sc.getBooks().stream())
-                    .count();
+            List<CategoryResponse> categoryResponses = categories.stream()
+                    .map(cat -> {
+                        CategoryResponse cr = modelMapper.map(cat, CategoryResponse.class);
 
-            catResponse.setBooksCount((int) booksCount);
+                        long booksCount = cat.getSubCategories().stream()
+                                .flatMap(sc -> sc.getBooks().stream())
+                                .map(Book::getId)
+                                .distinct()
+                                .count();
 
-            response.setCategory(catResponse); // BookResponse da bitta category bo‘lishi kerak
-            response.setSubCategoryName(sub.getName());
+                        cr.setBooksCount((int) booksCount);
+                        return cr;
+                    })
+                    .toList();
+
+            response.setCategories(categoryResponses);
+        } else {
+            response.setSubCategoryName(List.of());
+            response.setCategories(List.of());
         }
 
-        // favorite tekshirish
+        // favorite
         if (currentUser != null) {
-            boolean isFavorite = favoriteRepository
-                    .existsByUserIdAndBookId(currentUser.getId(), book.getId());
+            boolean isFavorite = favoriteRepository.existsByUserIdAndBookId(currentUser.getId(), book.getId());
             response.setIsFavorite(isFavorite);
         } else {
             response.setIsFavorite(false);
@@ -270,7 +367,6 @@ public class BookServiceImpl implements BookService {
 
         return response;
     }
-
 //    private BookResponse mapToResponse(Book book, User currentUser) {
 //        BookResponse response = modelMapper.map(book, BookResponse.class);
 //
