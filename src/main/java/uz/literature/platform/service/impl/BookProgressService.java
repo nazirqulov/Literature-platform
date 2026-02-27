@@ -323,9 +323,11 @@ public class BookProgressService {
                 .bookTitle(book.getTitle())
                 .bookAuthors(book.getAuthorsAsString())
                 .bookCover(book.getCoverImage())
-                .category(book.getSubCategory() != null && book.getSubCategory().getCategory() != null
-                        ? book.getSubCategory().getCategory().getName() : null)
-                .subCategory(book.getSubCategory() != null ? book.getSubCategory().getName() : null)
+                .category(book.getSubCategories() != null && book.getSubCategories().iterator().hasNext()
+                        && book.getSubCategories().iterator().next().getCategory() != null
+                        ? book.getSubCategories().iterator().next().getCategory().getName() : null)
+                .subCategory(book.getSubCategories() != null && book.getSubCategories().iterator().hasNext()
+                        ? book.getSubCategories().iterator().next().getName() : null)
                 .status(progress.getStatus().name())
                 .currentPage(progress.getCurrentPage())
                 .totalPages(book.getPageCount())

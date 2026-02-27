@@ -17,7 +17,7 @@ public class BookCreateRequest {
     @NotNull(message = "Muallif ID kiritilishi shart")
     private Long authorId;
     
-    private Set<Long> categoryIds;
+    private Set<Long> subCategoryIds;
     
     private String isbn;
     

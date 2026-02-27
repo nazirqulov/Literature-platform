@@ -39,7 +39,7 @@ public class SubCategory extends BaseLongEntity {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @OneToMany(mappedBy = "subCategory", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "subCategories")
     private Set<Book> books = new HashSet<>();
 
 

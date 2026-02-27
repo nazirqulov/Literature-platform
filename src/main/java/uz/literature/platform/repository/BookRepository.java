@@ -1,5 +1,6 @@
 package uz.literature.platform.repository;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,9 +16,9 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     Page<Book> findByIsActiveTrue(Pageable pageable);
 
-    @Query("SELECT b FROM Book b WHERE b.subCategory.category.id = :categoryId AND b.isActive = true")
-    Page<Book> findByCategoryIdAndIsActiveTrue(@Param("categoryId") Long categoryId, Pageable pageable);
-
+//    @Query("SELECT b FROM Book b WHERE b.subCategory.category.id = :categoryId AND b.isActive = true")
+//    Page<Book> findByCategoryIdAndIsActiveTrue(@Param("categoryId") Long categoryId, Pageable pageable);
+//
 
     List<Book> findByIsFeaturedTrueAndIsActiveTrue();
 
@@ -54,4 +55,15 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     Page<Book> searchBooks(@Param("keyword") String keyword, Pageable pageable);
 
     Page<Book> findByIdAndIsActiveTrue(Long authorId, Pageable pageable);
+
+    Book findByTitleAndIsActiveTrue(@NotBlank(message = "Kitob nomi kiritilishi shart") String title);
+
+    @Query("""
+               select distinct b
+               from Book b
+               join b.subCategories sc
+               where sc.category.id = :categoryId
+                 and b.isActive = true
+            """)
+    Page<Book> findByCategoryIdAndIsActiveTrue(Long categoryId, Pageable pageable);
 }
