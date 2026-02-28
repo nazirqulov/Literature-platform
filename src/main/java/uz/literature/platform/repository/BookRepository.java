@@ -35,21 +35,29 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Query(
             value = """
                     select b.*
-                    from books b
-                    where b.is_active = true
-                      and (
-                        lower(b.title) like lower(concat('%', :keyword, '%'))
-                        or lower(b.description) like lower(concat('%', :keyword, '%'))
-                      )
+                       from books b
+                                join book_authors ba on b.id = ba.book_id
+                                join authors a on ba.author_id = a.id
+                       where b.is_active = true
+                         and (
+                           lower(b.title) like lower(concat('%', :keyword, '%'))
+                               or lower(b.description) like lower(concat('%', :keyword, '%'))
+                               or lower(b.isbn) like lower(concat('%', :keyword, '%'))
+                               or lower(a.name) like lower(concat('%', :keyword, '%'))
+                           )
                     """,
             countQuery = """
                     select count(*)
-                    from books b
-                    where b.is_active = true
-                      and (
-                        lower(b.title) like lower(concat('%', :keyword, '%'))
-                        or lower(b.description) like lower(concat('%', :keyword, '%'))
-                      )
+                       from books b
+                                join book_authors ba on b.id = ba.book_id
+                                join authors a on ba.author_id = a.id
+                       where b.is_active = true
+                         and (
+                           lower(b.title) like lower(concat('%', :keyword, '%'))
+                               or lower(b.description) like lower(concat('%', :keyword, '%'))
+                               or lower(b.isbn) like lower(concat('%', :keyword, '%'))
+                               or lower(a.name) like lower(concat('%', :keyword, '%'))
+                           )
                     """,
             nativeQuery = true
     )

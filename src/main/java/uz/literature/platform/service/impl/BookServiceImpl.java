@@ -228,7 +228,7 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kitob topilmadi"));
 
-        if (!file.getContentType().equals("application/pdf")) {
+        if (!Objects.equals(file.getContentType(), "application/pdf")) {
             throw new BadRequestException("Faqat PDF fayllar qabul qilinadi");
         }
 
