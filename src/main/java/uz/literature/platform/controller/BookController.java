@@ -8,6 +8,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,9 @@ public class BookController {
     @Value("${app.upload.book.image}")
     private String uploadFile;
 
+    @Value("${app.upload.book.pdf}")
+    private String uploadPdfFile;
+
     @GetMapping("/get-all")
     public ResponseEntity<Page<BookResponse>> getAllBooks(
             @RequestParam(defaultValue = "0") int page,
@@ -57,7 +61,7 @@ public class BookController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<BookResponse>> searchBooks(
-            @RequestParam String keyword,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -176,25 +180,50 @@ public class BookController {
                 .body(resource);
     }
 
-    @PostMapping("/{id}/pdf")
+    @PostMapping(path = "/file/pdf/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> uploadPdfFile(
             @PathVariable Long id,
-            @PathVariable MultipartFile file) {
+            @RequestParam MultipartFile file) {
         BookResponse book = bookService.uploadPdfFile(id, file);
         return ResponseEntity.ok(book);
     }
 
-    @PostMapping("/{id}/audio")
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<?> viewPdf(@PathVariable Long id) throws IOException {
+
+        Book book = bookRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
+        if (book.getPdfFile() == null) return ResponseEntity.notFound().build();
+
+        String substring = book.getPdfFile().substring(6);
+
+        Path path = Paths.get(uploadPdfFile).resolve(substring).normalize();
+        Resource resource = new UrlResource(path.toUri());
+        if (!resource.exists() || !resource.isReadable()) return ResponseEntity.notFound().build();
+
+        String contentType = Files.probeContentType(path);
+        if (contentType == null) contentType = "application/octet-stream";
+        MediaType mediaType = MediaType.APPLICATION_PDF;
+        mediaType = MediaType.parseMediaType(contentType);
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"book.pdf\"")
+                .body(resource) ;
+    }
+
+    @PostMapping(path = "/file/audio/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> uploadAudioFile(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam MultipartFile file) {
         BookResponse book = bookService.uploadAudioFile(id, file);
         return ResponseEntity.ok(book);
     }
 
-    @PostMapping("/{id}/download")
+    @PostMapping(path = "/file/download/{id}")
     public ResponseEntity<Void> incrementDownloadCount(@PathVariable Long id) {
         bookService.incrementDownloadCount(id);
         return ResponseEntity.ok().build();

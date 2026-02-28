@@ -53,6 +53,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())
+                .headers(headers -> headers.frameOptions().sameOrigin())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
