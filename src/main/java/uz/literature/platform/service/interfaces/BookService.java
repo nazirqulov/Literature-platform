@@ -43,4 +43,5 @@ public interface BookService {
     void incrementViewCount(Long id);
     
     void incrementDownloadCount(Long id);
+
 }
