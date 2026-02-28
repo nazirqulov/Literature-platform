@@ -2,18 +2,30 @@ package uz.literature.platform.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import uz.literature.platform.entity.Book;
+import uz.literature.platform.exception.ResourceNotFoundException;
 import uz.literature.platform.payload.request.BookCreateRequest;
 import uz.literature.platform.payload.response.BookResponse;
+import uz.literature.platform.repository.BookRepository;
 import uz.literature.platform.service.interfaces.BookService;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/books")
@@ -23,7 +35,9 @@ public class BookController {
 
 
     private final BookService bookService;
-
+    private final BookRepository bookRepository;
+    @Value("${app.upload.book.image}")
+    private String uploadFile;
 
     @GetMapping("/get-all")
     public ResponseEntity<Page<BookResponse>> getAllBooks(
@@ -128,6 +142,38 @@ public class BookController {
             @PathVariable MultipartFile file) {
         BookResponse book = bookService.uploadCoverImage(id, file);
         return ResponseEntity.ok(book);
+    }
+
+    @GetMapping("/book-image/{id}")
+    public ResponseEntity<?> getBookImage(@PathVariable Long id) throws IOException {
+
+
+        Optional<Book> optional = bookRepository.findByIdAndDeletedFalse(id);
+
+        Book book = optional.orElseThrow(() -> new ResourceNotFoundException("Kitob topilmadi"));
+
+        String filename = book.getCoverImage();
+
+        if (filename == null || filename.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        String substring = filename.substring(7);
+
+        Path filePath = Paths.get(uploadFile).resolve(substring).normalize();
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (!resource.exists() || !resource.isReadable()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String contentType = Files.probeContentType(filePath);
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 
     @PostMapping("/{id}/pdf")

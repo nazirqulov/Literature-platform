@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import uz.literature.platform.entity.Book;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
@@ -66,4 +67,5 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                  and b.isActive = true
             """)
     Page<Book> findByCategoryIdAndIsActiveTrue(Long categoryId, Pageable pageable);
-}
+
+    Optional<Book> findByIdAndDeletedFalse(Long id);}
